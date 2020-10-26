@@ -1,0 +1,226 @@
+class GameManager
+{
+	field Dinosaur dino;
+	field int gameSpeed;
+	field int score;
+	field boolean GameOver;
+	field Array cactuses;
+	field int n_cactuses;
+	field int GroundHeight;
+	field int Game_FPS;
+	field int ObstaclesLimit;
+	field int CactusHeight;
+	field int CactusWidth;
+	field int DinossaurX;
+	field int DinossaurStartWeight;
+	field int DinossaurStartStrength;
+
+	constructor GameManager new(int startGameSpeed)
+	{
+		let GroundHeight = 200;
+		let Game_FPS = 30;
+		let ObstaclesLimit = 10;
+		let CactusHeight = 16;
+		let CactusWidth = 30;
+		let DinossaurX = 50;
+		let DinossaurStartStrength = 10;
+		let DinossaurStartWeight = 1;
+		let dino = Dinossaur.new(DinossaurX, GroundHeight, DinossaurStartStrength, DinossaurStartWeight);
+		let gameSpeed = startGameSpeed;
+		let score = 0;
+		let GameOver = false;
+		let cactuses = Array.new(ObstaclesLimit);
+		let n_cactuses = 0;
+
+		do newObstacle();
+		do Output.moveCursor(0, 25);
+		do Output.printString("Score: ");
+		do Output.printInt(score);
+		return this;
+	}
+
+	method void dispose()
+	{
+		do dino.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+	method void gameOver()
+	{
+		do Output.moveCursor(12, 25);
+		do Output.printString("Game Over");
+		do Output.println();
+
+		return;
+	}
+
+	method void Obstacles()
+	{
+		var Cactus c;
+		var int n;
+		let n = 0;
+		let c = cactuses[0];
+		do c.dispose();
+
+		while(~(n = n_cactuses - 1))
+		{
+			let cactuses[n] = cactuses[n+1];
+			let n = n + 1;
+		}
+		let cactuses[n] = null;
+		let n_cactuses = n_cactuses - 1;
+		do newObstacle();
+		return;
+	}
+
+	method void drawGround()
+	{
+		do Screen.setColor(true);
+		do Screen.drawLine(0, GroundHeight, 511, GroundHeight);
+		return;
+	}
+
+	method void newObstacle()
+	{
+		if(n_cactuses < ObstaclesLimit)
+		{
+			let cactuses[n_cactuses] = Cactus.new(CactusWidth, CactusHeight, GroundHeight);
+			let n_cactuses = n_cactuses + 1;
+		}
+		return;
+	}
+
+	method void handleGame()
+	{
+		var Cactus c;
+		var int n;
+		var boolean cycle;
+		var int backspaces;
+		let n = 0;
+		let cycle = false;
+
+		while(~(n = n_cactuses))
+		{
+			let c = cactuses[n];
+			do c.move(gameSpeed);
+			if(c.getCurrentPosition() = 0)
+			{
+				let cycle = true;
+				do c.erase();
+			}
+			let n = n + 1;
+		}
+
+		if(cycle)
+		{
+			do cycleObstacle();
+			let score = score + 1;
+
+			if(score < 101)
+			{
+				let backspaces = 2;
+			}
+
+			if(score < 11)
+			{
+				let backspaces = 1;
+			}
+
+			while(backspaces > 0)
+			{
+				do Output.backSpace();
+				let backspaces = backspaces - 1;
+			}
+			do Output.printInt(score);
+			if(Utility.modulo(score, 2) = 0)
+			{
+				let gameSpeed = gameSpeed + 1;
+			}
+		}
+
+		if(dino.isJumping())
+		{
+			do dino.handleJump();
+		}
+		let c = cactuses[0];
+
+		if(dino.isHit(c))
+		{
+			let GameOver = true;
+		}
+		do Sys.wait(1000/Game_FPS);
+		return;
+	}
+
+	method void run()
+	{
+		var char key;
+		var boolean exit;
+
+		let exit = false;
+
+		do drawGround();
+
+		do Output.moveCursor(9, 25);
+		do Output.printString("Spacebar");
+		while(~(key = 32))
+		{
+			let key = Keyboard.keyPressed();
+		}
+		do Output.moveCursor(9, 25);
+		do Output.printString("        ");
+		do Output.moveCursor(0, 32);
+		do Output.printInt(0);
+
+		while(~exit)
+		{
+
+			while((key = 0) & (~exit))
+			{
+				let key = Keyboard.keyPressed();
+				do handleGame();
+				if(GameOver)
+				{
+					do gameOver();
+					let exit = true;
+				}
+			}
+			if(key = 140)
+			{
+				let exit = true;
+			}
+
+			if(key = 32)
+			{
+				do dino.startJump();
+			}
+
+			if(key = 73)
+			{
+				let gameSpeed = gameSpeed + 1;
+			}
+
+			if(key = 75)
+			{
+				let gameSpeed = Math.max(gameSpeed - 1, 1);
+			}
+
+			if(key = 65)
+			{
+				do newObstacle();
+			}
+			while (~(key = 0) & (~exit))
+			{
+				let key = Keyboard.keyPressed();
+				do handleGame();
+				if(GameOver)
+				{
+					do gameOver();
+					let exit = true;
+				}
+			}
+		}
+		return;
+	}
+}

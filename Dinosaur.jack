@@ -1,0 +1,153 @@
+class Dinossaur{
+	field int x;
+	field int currentHeight;
+	field int jumpStrength;
+	field int weight;
+	field int currentJumpSpeed;
+	field int GroundHeight;
+	field int DinoHeight;
+	field int DinoWidth;
+	field boolean jumping;
+	field boolean goingUp;
+
+	constructor Dinosaur new(int startX, int GroundHeight, int jumpstrength, int Weight)
+	{
+		let DinoHeight = 16;
+		let DinoWidth = 16;
+		let currentJumpSpeed = 0;
+		let x = startX;
+		let GroundHeight = groundHeight;
+		let weight = Weight;
+		let currentHeight = groundHeight - DinoHeight - 1;
+		let jumpStrength = jumpstrength;
+		let jumping = false;
+		let goingUp = false;
+
+		do draw();
+		return this;
+	}
+
+	method void draw()
+	{
+		var int memAddress;
+		let memAddress = 16384 + ScreenHelper.ToScreenMap(x, currentHeight);
+		if((memAddress > 16383) & (memAddress < 24576))
+		{
+			do Memory.poke(memAddress+0, 32256);
+			do Memory.poke(memAddress+32, -768);
+			do Memory.poke(memAddress+64, -256);
+			do Memory.poke(memAddress+96, -256);
+			do Memory.poke(memAddress+128, 3840);
+			do Memory.poke(memAddress+160, 32512);
+			do Memory.poke(memAddress+192, 1921);
+			do Memory.poke(memAddress+224, 8129);
+			do Memory.poke(memAddress+256, 6135);
+			do Memory.poke(memAddress+288, 2047);
+			do Memory.poke(memAddress+320, 2046);
+			do Memory.poke(memAddress+352, 1020);
+			do Memory.poke(memAddress+384, 496);
+			do Memory.poke(memAddress+416, 432);
+			do Memory.poke(memAddress+448, 272);
+			do Memory.poke(memAddress+480, 816);
+		}
+		return;
+	}
+
+	method void dispose()
+	{
+		do Memory.deAlloc(this);
+		return;
+	}
+
+	method void erase()
+	{
+		var int memAddress;
+		let memAddress = 16384 + ScreenHelper.ToScreenMap(x, currentHeight);
+		if((memAddress > 16383) & (memAddress < 24576))
+		{
+			do Memory.poke(memAddress+0, 0);
+			do Memory.poke(memAddress+32, 0);
+			do Memory.poke(memAddress+64, 0);
+			do Memory.poke(memAddress+96, 0);
+			do Memory.poke(memAddress+128, 0);
+			do Memory.poke(memAddress+160, 0);
+			do Memory.poke(memAddress+192, 0);
+			do Memory.poke(memAddress+224, 0);
+			do Memory.poke(memAddress+256, 0);
+			do Memory.poke(memAddress+288, 0);
+			do Memory.poke(memAddress+320, 0);
+			do Memory.poke(memAddress+352, 0);
+			do Memory.poke(memAddress+384, 0);
+			do Memory.poke(memAddress+416, 0);
+			do Memory.poke(memAddress+448, 0);
+			do Memory.poke(memAddress+480, 0);
+		}
+		return;
+	}
+
+	method boolean isJumping()
+	{
+		return jumping;
+	}
+
+	method boolean isHit(Cactus c)
+	{
+		var boolean hit;
+		var int cactusX;
+		var int cactusY;
+		var int cactusWidth;
+		var int cactusHeight;
+
+		let hit = false;
+		let cactusX = c.getCurrentPosition();
+		let cactusY = GroundHeight - c.getHeight();
+		let cactusWidth = c.getWidth();
+		let cactusHeight = c.getHeight();
+
+		if((x < (cactusX+cactusWidth)) & ((x+DinoWidth) > cactusX) &(currentHeight < (cactusY+cactusHeight)) & ((currentHeight+DinoHeight) > cactusY))
+		{
+			let hit = true;
+		}
+		return hit;
+	}
+
+	method void startJump()
+	{
+		if(~jumping)
+		{
+			let jumping = true;
+			let goingUp = true;
+			let currentJumpSpeed = jumpStrength;
+		}
+		return;
+	}
+
+	method void handleJump()
+	{
+		do erase();
+
+		if(goingUp)
+		{
+			let currentHeight = currentHeight - currentJumpSpeed;
+			let currentJumpSpeed = currentJumpSpeed - weight;
+		}
+		else
+		{
+			let currentHeight = currentHeight + currentJumpSpeed;
+			let currentJumpSpeed = currentJumpSpeed + weight;
+		}
+
+		if(currentJumpSpeed = 0)
+		{
+			let goingUp = false;
+		}
+		if(currentHeight > (groundHeight - DinoHeight - 1))
+		{
+			let currentHeight = groundHeight - DinoHeight - 1;
+			let jumping = false;
+			let currentJumpSpeed = 0;
+		}
+		do draw();
+		return;
+	}
+}
